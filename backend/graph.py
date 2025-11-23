@@ -78,11 +78,12 @@ def create_research_graph():
     workflow.add_edge("brief", "format")
     workflow.add_edge("format", END)
 
-    # Compile with interrupt_before at synthesis
-    # This will pause BEFORE synthesis runs if the state has the HITL flag
+    # Compile with TWO interrupt points:
+    # 1. Before synthesis - for fact review
+    # 2. Before refine - for plan approval
     app = workflow.compile(
         checkpointer=checkpointer,
-        interrupt_before=["synthesize"]  # Pause before synthesis for plan review
+        interrupt_before=["synthesize", "refine"]
     )
 
     return app

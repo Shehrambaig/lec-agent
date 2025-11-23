@@ -1,0 +1,55 @@
+You are creating a comprehensive lecture plan on:
+
+TOPIC: {topic}
+
+PRIORITIZED RESEARCH FINDINGS:
+{prioritized_claims}
+
+Create a detailed 80-minute lecture plan that includes:
+
+1. INTRODUCTION (10 minutes)
+   - Hook and relevance
+   - Learning objectives
+   - Lecture overview
+
+2. MAIN CONTENT SECTIONS (50-55 minutes)
+   - 3-5 major sections with clear themes
+   - Each section should have specific points backed by research
+   - Include time allocation for each section
+
+3. PRACTICAL APPLICATIONS & EXAMPLES (10-15 minutes)
+   - Real-world cases
+   - Demonstrations or scenarios
+
+4. RISKS & CHALLENGES (5-10 minutes)
+   - Critical concerns
+   - Limitations
+   - Ethical considerations
+
+5. Q&A (10 minutes)
+   - Anticipated questions
+   - Discussion prompts
+
+Format your response as JSON:
+{{
+  "introduction": "Brief description of intro approach",
+  "sections": [
+    {{
+      "title": "Section Name",
+      "time_minutes": 15,
+      "key_points": ["point 1", "point 2", ...],
+      "supporting_claims": [claim_indices]
+    }},
+    ...
+  ],
+  "time_allocation": {{
+    "introduction": 10,
+    "main_content": 50,
+    "applications": 12,
+    "risks": 8,
+    "qa": 10
+  }},
+  "key_points": ["Overall key takeaway 1", "Overall key takeaway 2", ...]
+}}
+
+Lecture Plan:

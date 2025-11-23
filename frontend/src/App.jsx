@@ -1,0 +1,231 @@
+import { useState } from 'react';
+import InputForm from './components/InputForm';
+import PlanReview from './components/PlanReview';
+import FactVerification from './components/FactVerification';
+import ProgressTracker from './components/ProgressTracker';
+import './App.css';
+
+function App() {
+  const [sessionId, setSessionId] = useState(null);
+  const [ws, setWs] = useState(null);
+  const [status, setStatus] = useState('idle'); // idle, running, waiting_plan, waiting_facts, complete
+  const [currentNode, setCurrentNode] = useState('');
+  const [completedNodes, setCompletedNodes] = useState([]);
+  const [checkpoint, setCheckpoint] = useState(null);
+  const [checkpointData, setCheckpointData] = useState(null);
+  const [logs, setLogs] = useState([]);
+  const [completedBrief, setCompletedBrief] = useState(null);
+  const [showOutputModal, setShowOutputModal] = useState(false);
+
+  const addLog = (message, type = 'info') => {
+    setLogs(prev => [...prev, { message, type, timestamp: new Date().toISOString() }]);
+  };
+
+  const startResearch = async (topic) => {
+    try {
+      addLog(`Starting research on: ${topic}`, 'info');
+      
+      // Create session
+      const response = await fetch('http://localhost:8000/research/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic })
+      });
+      
+      const data = await response.json();
+      setSessionId(data.session_id);
+      addLog(`Session created: ${data.session_id}`, 'success');
+      
+      // Connect WebSocket
+      const websocket = new WebSocket(`ws://localhost:8000/ws/${data.session_id}`);
+      
+      websocket.onopen = () => {
+        addLog('WebSocket connected', 'success');
+        setStatus('running');
+      };
+      
+      websocket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        handleWebSocketMessage(message);
+      };
+      
+      websocket.onerror = (error) => {
+        addLog('WebSocket error: ' + error, 'error');
+      };
+      
+      websocket.onclose = () => {
+        addLog('WebSocket closed', 'info');
+      };
+      
+      setWs(websocket);
+      
+    } catch (error) {
+      addLog(`Error: ${error.message}`, 'error');
+    }
+  };
+
+  const handleWebSocketMessage = (message) => {
+    switch (message.type) {
+      case 'status':
+        addLog(message.message, 'info');
+        break;
+        
+      case 'node_complete':
+        addLog(`✓ Node completed: ${message.node}`, 'success');
+        setCurrentNode(message.state.current_node);
+        // Add to completed nodes if not already there
+        setCompletedNodes(prev => {
+          if (!prev.includes(message.node)) {
+            return [...prev, message.node];
+          }
+          return prev;
+        });
+        break;
+        
+      case 'hitl_required':
+        addLog(`⏸ Waiting for human input: ${message.checkpoint}`, 'warning');
+        setCheckpoint(message.checkpoint);
+        setCheckpointData(message.data);
+        setStatus(message.checkpoint === 'plan_review' ? 'waiting_plan' : 'waiting_facts');
+        break;
+        
+      case 'complete':
+        addLog('✓ Research complete!', 'success');
+        setStatus('complete');
+        setCompletedBrief(message.brief_content || message.brief_preview);
+        setShowOutputModal(true);
+        break;
+        
+      case 'error':
+        addLog(`Error: ${message.message}`, 'error');
+        break;
+    }
+  };
+
+  const submitFeedback = async (checkpointType, decision, comments = null, emphasisAreas = null) => {
+    try {
+      addLog(`Submitting feedback: ${decision}`, 'info');
+
+      const response = await fetch('http://localhost:8000/research/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          checkpoint_type: checkpointType,
+          decision,
+          comments,
+          emphasis_areas: emphasisAreas
+        })
+      });
+
+      const data = await response.json();
+      addLog('Feedback submitted, continuing...', 'success');
+      setStatus('running');
+      setCheckpoint(null);
+      setCheckpointData(null);
+
+    } catch (error) {
+      addLog(`Error submitting feedback: ${error.message}`, 'error');
+    }
+  };
+
+  const downloadBrief = () => {
+    const blob = new Blob([completedBrief], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `research-brief-${new Date().toISOString().split('T')[0]}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="app">
+      <header className="app-header">
+        <h1>🎓 Lecture Assistant Agent</h1>
+        <p>LangGraph + Human-in-the-Loop Research System</p>
+      </header>
+
+      <div className="app-container">
+        <div className="main-panel">
+          {status === 'idle' && (
+            <InputForm onSubmit={startResearch} />
+          )}
+
+          {status === 'waiting_plan' && checkpointData && (
+            <PlanReview 
+              draftPlan={checkpointData.draft_plan}
+              facts={checkpointData.facts_for_verification}
+              onSubmit={(decision, comments, emphasisAreas) => 
+                submitFeedback('plan_review', decision, comments, emphasisAreas)
+              }
+            />
+          )}
+
+          {status === 'waiting_facts' && checkpointData && (
+            <FactVerification 
+              facts={checkpointData.facts}
+              onSubmit={(decision, comments) => 
+                submitFeedback('fact_verification', decision, comments)
+              }
+            />
+          )}
+
+          {status === 'running' && (
+            <div className="status-panel">
+              <h2>🔄 Research in Progress</h2>
+              <p className="current-node">Current node: <strong>{currentNode}</strong></p>
+              <div className="spinner"></div>
+            </div>
+          )}
+
+          {status === 'complete' && !showOutputModal && (
+            <div className="complete-panel">
+              <h2>✅ Research Complete!</h2>
+              <p>Your research brief has been generated.</p>
+              <button onClick={() => setShowOutputModal(true)} className="btn-primary">
+                View Output
+              </button>
+              <button onClick={() => window.location.reload()} className="btn-secondary">
+                Start New Research
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="side-panel">
+          <ProgressTracker logs={logs} currentNode={currentNode} completedNodes={completedNodes} />
+        </div>
+      </div>
+
+      {/* Output Modal */}
+      {showOutputModal && completedBrief && (
+        <div className="modal-overlay" onClick={() => setShowOutputModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📄 Research Brief Output</h2>
+              <button className="modal-close" onClick={() => setShowOutputModal(false)}>
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <pre className="output-content">{completedBrief}</pre>
+            </div>
+            <div className="modal-footer">
+              <button onClick={downloadBrief} className="btn-primary">
+                📥 Download Brief
+              </button>
+              <button onClick={() => setShowOutputModal(false)} className="btn-secondary">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;

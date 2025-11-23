@@ -1,0 +1,25 @@
+# Simple Requirements (Let pip resolve dependencies)
+# Use this if you have dependency conflicts
+
+# Core Web Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+websockets>=12.0
+python-dotenv>=1.0.0
+aiofiles>=23.2.0
+python-multipart>=0.0.6
+
+# APIs
+openai>=1.3.0
+google-api-python-client>=2.100.0
+
+# Data Validation (v1 for compatibility)
+pydantic<2.0.0
+
+# LangChain Ecosystem (let pip resolve compatible versions)
+langgraph>=0.0.20
+langchain>=0.0.340
+langchain-openai>=0.0.2
+
+# Optional: Tiktoken (comment out if build fails)
+tiktoken>=0.5.0

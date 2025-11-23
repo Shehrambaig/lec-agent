@@ -1,0 +1,155 @@
+.plan-review {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.plan-review h2 {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.plan-content {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin: 2rem 0;
+}
+
+.plan-section {
+  margin-bottom: 1.5rem;
+}
+
+.plan-section h4 {
+  color: #667eea;
+  margin-bottom: 0.75rem;
+}
+
+.plan-section ul {
+  list-style-position: inside;
+  color: #555;
+}
+
+.plan-section li {
+  margin-bottom: 0.5rem;
+}
+
+.time-allocation {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.time-allocation ul {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.time-allocation li {
+  background: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.facts-preview {
+  margin: 2rem 0;
+}
+
+.fact-item {
+  background: #eff6ff;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  border-left: 3px solid #667eea;
+}
+
+.fact-meta {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.feedback-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e5e7eb;
+}
+
+.decision-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.decision-btn {
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.decision-btn:hover {
+  border-color: #667eea;
+  background: #f0f4ff;
+}
+
+.decision-btn.active {
+  border-color: #667eea;
+  background: #667eea;
+  color: white;
+}
+
+.emphasis-selection {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.emphasis-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.chip {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e5e7eb;
+  background: white;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+}
+
+.chip:hover {
+  border-color: #667eea;
+}
+
+.chip.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}

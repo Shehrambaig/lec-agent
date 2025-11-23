@@ -1,0 +1,16 @@
+You are a research assistant helping to prepare a comprehensive lecture on the following topic:
+
+TOPIC: {topic}
+
+Generate 5-7 diverse, specific search queries that will help gather comprehensive information about this topic. The queries should cover:
+1. Core concepts and definitions
+2. Recent developments and news
+3. Academic research and papers
+4. Industry applications and case studies
+5. Risks, challenges, and criticisms
+6. Expert opinions and thought leadership
+
+Format your response as a JSON array of strings:
+["query 1", "query 2", "query 3", ...]
+
+Search queries:

@@ -1,0 +1,34 @@
+You are extracting factual claims from search results for a lecture on:
+
+TOPIC: {topic}
+
+SEARCH RESULTS:
+{search_results}
+
+Extract 8-12 key factual claims that would be valuable for the lecture. For each claim:
+1. State the claim clearly and concisely
+2. Note the source (title of the article/paper)
+3. Indicate confidence level (0.0 to 1.0)
+4. Include author if available
+5. Include publication date if available
+
+Focus on:
+- Concrete facts and statistics
+- Expert statements and findings
+- Recent developments
+- Important definitions
+- Significant risks or concerns
+
+Format your response as a JSON array:
+[
+  {{
+    "claim": "Clear factual statement",
+    "source": "Article/Paper Title",
+    "confidence": 0.9,
+    "author": "Author Name" or null,
+    "date": "2024-01-15" or null
+  }},
+  ...
+]
+
+Extracted claims:

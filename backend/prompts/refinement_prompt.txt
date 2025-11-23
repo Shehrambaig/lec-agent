@@ -1,0 +1,30 @@
+You are refining a lecture plan based on human feedback.
+
+TOPIC: {topic}
+
+ORIGINAL PLAN:
+{original_plan}
+
+HUMAN FEEDBACK:
+Decision: {decision}
+Comments: {comments}
+Emphasis Areas: {emphasis_areas}
+
+AVAILABLE RESEARCH:
+{prioritized_claims}
+
+Based on the feedback, revise the lecture plan. If the human requested:
+- "approve": No changes needed (return original)
+- "request_more_sources": Acknowledge limitation, use existing research more deeply
+- "emphasize_topic": Expand sections related to {emphasis_areas}, reduce others
+- "rework": Significantly restructure based on {comments}
+
+Maintain the same JSON format as the original plan:
+{{
+  "introduction": "...",
+  "sections": [...],
+  "time_allocation": {{...}},
+  "key_points": [...]
+}}
+
+Revised Plan:

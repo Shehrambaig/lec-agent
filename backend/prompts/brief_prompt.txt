@@ -1,0 +1,54 @@
+You are writing a comprehensive research brief for a lecture on:
+
+TOPIC: {topic}
+
+REFINED LECTURE PLAN:
+{refined_plan}
+
+VERIFIED RESEARCH FINDINGS:
+{verified_claims}
+
+ALL CITATIONS:
+{citations}
+
+Write a professional research brief in Markdown format with the following sections:
+
+# [Title Based on Topic]
+
+## Introduction
+- Context and significance
+- Why this topic matters
+- What the lecture will cover
+
+## Summary
+- High-level overview (3-4 sentences)
+- Main thesis or argument
+
+## Key Findings
+- 3-6 major findings from research
+- Each finding should be 2-3 sentences
+- Include inline citations like [1], [2], etc.
+- Focus on the most impactful discoveries
+
+## Risks/Unknowns
+- 3 major risks, challenges, or uncertainties
+- Each should be 2-3 sentences
+- Reference sources with citations
+
+## Further Reading
+- 5-8 curated sources
+- Include mix of academic papers, articles, and industry reports
+- Format as: Title - URL (brief description)
+
+## Sources
+[1] Full citation with URL
+[2] Full citation with URL
+...
+
+IMPORTANT:
+- Use proper Markdown formatting
+- Every factual claim must have a citation [n]
+- Be concise but comprehensive
+- Maintain professional academic tone
+
+Research Brief:

@@ -5,6 +5,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from backend.state import ResearchState
 from backend.nodes import (
     input_node,
+    research_plan_node,
     search_node,
     extract_node,
     author_prioritization_node,
@@ -13,6 +14,19 @@ from backend.nodes import (
     brief_node,
     formatting_node
 )
+
+
+def should_continue_after_plan(state: ResearchState) -> Literal["search", "plan"]:
+    """
+    After research plan review, check if approved or needs revision.
+    If approved, continue to search. If revision needed, loop back to plan.
+    """
+    if state.plan_approved:
+        return "search"
+    # If not approved, it means revision was requested - loop back to plan
+    # But on first run, plan_approved will be False and we wait for HITL
+    # The main.py will handle setting plan_approved based on feedback
+    return "search"  # Default to search, HITL interrupt will pause before this
 
 
 def should_continue_after_prioritize(state: ResearchState) -> Literal["synthesize"]:
@@ -33,6 +47,9 @@ def should_wait_for_fact_verification(state: ResearchState) -> Literal["wait", "
 def create_research_graph():
     """
     Create the LangGraph workflow for lecture research.
+
+    Workflow:
+    INPUT → PLAN → [HITL: approve/revise loop] → SEARCH → EXTRACT → PRIORITIZE → SYNTHESIZE → REFINE → BRIEF → FORMAT → END
     """
     checkpointer = MemorySaver()
     print("ℹ️  Using MemorySaver (checkpoints in memory only)")
@@ -41,6 +58,7 @@ def create_research_graph():
 
     # Add nodes
     workflow.add_node("input", input_node)
+    workflow.add_node("plan", research_plan_node)
     workflow.add_node("search", search_node)
     workflow.add_node("extract", extract_node)
     workflow.add_node("prioritize", author_prioritization_node)
@@ -53,7 +71,14 @@ def create_research_graph():
     workflow.set_entry_point("input")
 
     # Add edges
-    workflow.add_edge("input", "search")
+    # Input -> Plan (new research planning step)
+    workflow.add_edge("input", "plan")
+
+    # Plan -> Search (after HITL approval)
+    # The interrupt_before on "search" will pause for human approval
+    workflow.add_edge("plan", "search")
+
+    # Continue with rest of workflow
     workflow.add_edge("search", "extract")
     workflow.add_edge("extract", "prioritize")
 
@@ -78,12 +103,13 @@ def create_research_graph():
     workflow.add_edge("brief", "format")
     workflow.add_edge("format", END)
 
-    # Compile with TWO interrupt points:
-    # 1. Before synthesis - for fact review
-    # 2. Before refine - for plan approval
+    # Compile with interrupt points:
+    # 1. Before search - for research plan approval (NEW)
+    # 2. Before synthesize - for fact review
+    # 3. Before refine - for plan approval
     app = workflow.compile(
         checkpointer=checkpointer,
-        interrupt_before=["synthesize", "refine"]
+        interrupt_before=["search", "synthesize", "refine"]
     )
 
     return app

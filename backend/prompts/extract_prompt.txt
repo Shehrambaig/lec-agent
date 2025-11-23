@@ -8,9 +8,12 @@ SEARCH RESULTS:
 Extract 8-12 key factual claims that would be valuable for the lecture. For each claim:
 1. State the claim clearly and concisely
 2. Note the source (title of the article/paper)
-3. Indicate confidence level (0.0 to 1.0)
-4. Include author if available
-5. Include publication date if available
+3. Include the Citation ID from the search result where you found this claim
+4. Indicate confidence level (0.0 to 1.0)
+5. Include author if available
+6. Include publication date if available
+
+IMPORTANT: Each claim MUST include the correct citation_id from the search result it came from.
 
 Focus on:
 - Concrete facts and statistics
@@ -24,6 +27,7 @@ Format your response as a JSON array:
   {{
     "claim": "Clear factual statement",
     "source": "Article/Paper Title",
+    "citation_id": 1,
     "confidence": 0.9,
     "author": "Author Name" or null,
     "date": "2024-01-15" or null

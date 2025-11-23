@@ -13,7 +13,7 @@ function FactVerification({ facts, onSubmit }) {
 
   return (
     <div className="fact-verification">
-      <h2>✅ Fact Verification</h2>
+      <h2>Fact Verification</h2>
       <p className="subtitle">Review the key facts that will be used in the lecture</p>
 
       <div className="facts-list">
@@ -23,7 +23,7 @@ function FactVerification({ facts, onSubmit }) {
             <div className="fact-content">
               <p className="fact-claim">{fact.claim}</p>
               <div className="fact-details">
-                <span className="fact-source">📄 {fact.source}</span>
+                <span className="fact-source">{fact.source}</span>
                 <span className="fact-confidence">
                   Confidence: {(fact.confidence * 100).toFixed(0)}%
                 </span>
@@ -41,19 +41,19 @@ function FactVerification({ facts, onSubmit }) {
             className={`decision-btn ${decision === 'approve' ? 'active' : ''}`}
             onClick={() => setDecision('approve')}
           >
-            ✅ All Facts Verified
+            All Facts Verified
           </button>
           <button 
             className={`decision-btn ${decision === 'request_more_sources' ? 'active' : ''}`}
             onClick={() => setDecision('request_more_sources')}
           >
-            🔍 Need More Verification
+            Need More Verification
           </button>
           <button 
             className={`decision-btn ${decision === 'rework' ? 'active' : ''}`}
             onClick={() => setDecision('rework')}
           >
-            ⚠️ Facts Need Review
+            Facts Need Review
           </button>
         </div>
 

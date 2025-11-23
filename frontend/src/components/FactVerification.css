@@ -4,8 +4,14 @@
 }
 
 .fact-verification h2 {
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.fact-verification .subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
 }
 
 .facts-list {
@@ -15,32 +21,33 @@
 .fact-card {
   display: flex;
   gap: 1rem;
-  background: #f9fafb;
+  background: var(--bg-tertiary);
   padding: 1.25rem;
-  border-radius: 8px;
+  border-radius: 6px;
   margin-bottom: 1rem;
-  border-left: 4px solid #667eea;
+  border-left: 2px solid var(--text-muted);
 }
 
 .fact-number {
   flex-shrink: 0;
   width: 32px;
   height: 32px;
-  background: #667eea;
-  color: white;
+  background: var(--text-muted);
+  color: var(--bg-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
 .fact-content {
   flex-grow: 1;
 }
 
-.fact-claim {
-  color: #333;
+.fact-card .fact-claim {
+  color: var(--text-primary);
   margin-bottom: 0.75rem;
   line-height: 1.5;
 }
@@ -49,24 +56,91 @@
   display: flex;
   gap: 1.5rem;
   font-size: 0.85rem;
-  color: #666;
+  color: var(--text-muted);
 }
 
-.fact-source {
+.fact-card .fact-source {
   flex-grow: 1;
+  color: var(--text-secondary);
 }
 
-.fact-confidence {
-  font-weight: 600;
-  color: #10b981;
+.fact-card .fact-confidence {
+  font-weight: 500;
+  color: var(--success);
 }
 
 .verification-section {
   margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 2px solid #e5e7eb;
+  border-top: 1px solid var(--border-color);
 }
 
 .verification-section h3 {
   margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.fact-verification .decision-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.fact-verification .decision-btn {
+  padding: 0.875rem;
+  border: 1px solid var(--border-light);
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.fact-verification .decision-btn:hover {
+  border-color: var(--text-muted);
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.fact-verification .decision-btn.active {
+  border-color: var(--text-primary);
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+
+.fact-verification .form-group {
+  margin: 1rem 0;
+}
+
+.fact-verification .form-group label {
+  display: block;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.fact-verification .form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  box-sizing: border-box;
+}
+
+.fact-verification .form-group textarea:focus {
+  outline: none;
+  border-color: var(--text-muted);
+}
+
+.fact-verification .form-group textarea::placeholder {
+  color: var(--text-muted);
 }

@@ -15,7 +15,7 @@ function PlanApproval({ draftPlan, onSubmit }) {
 
   return (
     <div className="plan-approval-container">
-      <h2>📋 Plan Approval Required</h2>
+      <h2>Plan Approval Required</h2>
       <p className="subtitle">Please review the generated lecture plan</p>
 
       <div className="plan-content">
@@ -31,19 +31,19 @@ function PlanApproval({ draftPlan, onSubmit }) {
             className={`decision-btn approve ${decision === 'approve' ? 'active' : ''}`}
             onClick={() => setDecision('approve')}
           >
-            ✓ Approve Plan
+            Approve Plan
           </button>
           <button
             className={`decision-btn rework ${decision === 'rework' ? 'active' : ''}`}
             onClick={() => setDecision('rework')}
           >
-            ↻ Request Rework
+            Request Rework
           </button>
           <button
             className={`decision-btn reject ${decision === 'reject' ? 'active' : ''}`}
             onClick={() => setDecision('reject')}
           >
-            ✗ Reject
+            Reject
           </button>
         </div>
 

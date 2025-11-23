@@ -22,6 +22,15 @@ class ExtractedClaim(BaseModel):
     date: Optional[str] = None
 
 
+class ResearchPlan(BaseModel):
+    """Research action plan generated before conducting searches."""
+    search_queries: List[str]
+    research_angles: List[Dict[str, str]]  # Each angle has 'title' and 'description'
+    topic: str
+    revision_count: int = 0
+    revision_feedback: Optional[str] = None
+
+
 class DraftPlan(BaseModel):
     """Initial lecture plan structure."""
     introduction: str
@@ -44,6 +53,11 @@ class ResearchState(BaseModel):
     # Input
     topic: str
     user_id: str = "default_user"
+
+    # Research Planning (before search)
+    research_plan: Optional[ResearchPlan] = None
+    human_feedback_research_plan: Optional[HumanFeedback] = None
+    plan_approved: bool = False
 
     # Search & Extraction
     search_queries: List[str] = []

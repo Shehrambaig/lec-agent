@@ -22,10 +22,40 @@ function PlanReview({ draftPlan, facts, onSubmit }) {
 
   return (
     <div className="plan-review">
-      <h2>📋 Plan Review Required</h2>
-      <p className="subtitle">Review the key facts found and provide direction for the lecture plan</p>
+      <h2>Fact Check</h2>
+      <p className="subtitle">Review the extracted facts and their sources before proceeding</p>
 
-      {/* Only show draft plan if it exists */}
+      {/* Always show facts first */}
+      <div className="facts-preview">
+        <h3>Extracted Facts ({facts?.length || 0})</h3>
+        {facts && facts.length > 0 ? (
+          facts.slice(0, 6).map((fact, idx) => (
+            <div key={idx} className="fact-item">
+              <p className="fact-claim"><strong>Fact #{idx + 1}:</strong> {fact.claim}</p>
+              <div className="fact-meta">
+                <span className="fact-confidence">
+                  Confidence: {fact.confidence ? (fact.confidence * 100).toFixed(0) : 0}%
+                </span>
+                <span className="fact-source">Source: {fact.source || 'N/A'}</span>
+              </div>
+              {fact.url && (
+                <a
+                  href={fact.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="fact-url"
+                >
+                  {fact.url}
+                </a>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="no-facts">No facts available for review.</p>
+        )}
+      </div>
+
+      {/* Show draft plan if it exists */}
       {draftPlan && (
         <div className="plan-content">
           <h3>Draft Lecture Plan</h3>
@@ -61,24 +91,6 @@ function PlanReview({ draftPlan, facts, onSubmit }) {
         </div>
       )}
 
-      {/* Always show facts */}
-      <div className="facts-preview">
-        <h3>Key Facts Found ({facts?.length || 0})</h3>
-        {facts && facts.length > 0 ? (
-          facts.slice(0, 6).map((fact, idx) => (
-            <div key={idx} className="fact-item">
-              <p><strong>Claim #{idx + 1}:</strong> {fact.claim}</p>
-              <span className="fact-meta">
-                Source: {fact.source || 'N/A'} |
-                Confidence: {fact.confidence ? (fact.confidence * 100).toFixed(0) : 0}%
-              </span>
-            </div>
-          ))
-        ) : (
-          <p className="no-facts">No facts available for review.</p>
-        )}
-      </div>
-
       <div className="feedback-section">
         <h3>Your Feedback</h3>
 
@@ -87,25 +99,25 @@ function PlanReview({ draftPlan, facts, onSubmit }) {
             className={`decision-btn ${decision === 'approve' ? 'active' : ''}`}
             onClick={() => setDecision('approve')}
           >
-            ✅ Approve & Continue
+            Approve & Continue
           </button>
           <button
             className={`decision-btn ${decision === 'request_more_sources' ? 'active' : ''}`}
             onClick={() => setDecision('request_more_sources')}
           >
-            🔍 Need More Sources
+            Need More Sources
           </button>
           <button
             className={`decision-btn ${decision === 'emphasize_topic' ? 'active' : ''}`}
             onClick={() => setDecision('emphasize_topic')}
           >
-            🎯 Emphasize Topics
+            Emphasize Topics
           </button>
           <button
             className={`decision-btn ${decision === 'rework' ? 'active' : ''}`}
             onClick={() => setDecision('rework')}
           >
-            🔄 Rework & Research More
+            Rework & Research More
           </button>
         </div>
 

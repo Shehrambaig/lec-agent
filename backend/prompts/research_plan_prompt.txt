@@ -1,0 +1,37 @@
+You are a research assistant helping to prepare a comprehensive lecture on the following topic:
+
+TOPIC: {topic}
+
+{revision_section}
+
+Create a detailed research action plan that outlines HOW you will conduct the research. This plan will be reviewed by a human before any searches are executed.
+
+Your plan should include:
+
+1. SEARCH QUERIES (5-7 specific queries):
+   - Queries that will find authoritative sources
+   - Cover different aspects of the topic
+   - Include academic, news, and industry perspectives
+
+2. RESEARCH ANGLES (4-6 angles to explore):
+   - Each angle should be a specific aspect or perspective to investigate
+   - Explain why this angle is important for the topic
+   - These angles will guide how the research findings are organized
+
+Format your response as JSON:
+{{
+    "search_queries": [
+        "query 1",
+        "query 2",
+        ...
+    ],
+    "research_angles": [
+        {{
+            "title": "Angle Title",
+            "description": "Brief explanation of what this angle covers and why it matters"
+        }},
+        ...
+    ]
+}}
+
+Research Plan:

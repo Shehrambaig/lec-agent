@@ -44,12 +44,18 @@ def extract_node(state: ResearchState) -> ResearchState:
             claims_str = claims_str.split("```")[1].split("```")[0].strip()
         
         claims_data = json.loads(claims_str)
-        
+
+        # Build a set of valid citation IDs for validation
+        valid_citation_ids = {r['citation_id'] for r in state.search_results}
+        default_citation_id = state.search_results[0]['citation_id'] if state.search_results else 1
+
         # Create ExtractedClaim objects
         for claim_data in claims_data:
-            # Find matching citation (use first result's citation as fallback)
-            citation_id = state.search_results[0]['citation_id'] if state.search_results else 1
-            
+            # Use citation_id from LLM response, validate it exists, fallback to default
+            citation_id = claim_data.get('citation_id', default_citation_id)
+            if citation_id not in valid_citation_ids:
+                citation_id = default_citation_id
+
             claim = ExtractedClaim(
                 claim=claim_data['claim'],
                 source=claim_data['source'],

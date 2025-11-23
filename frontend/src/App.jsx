@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import InputForm from './components/InputForm';
+import ResearchPlanReview from './components/ResearchPlanReview';
 import PlanReview from './components/PlanReview';
 import PlanApproval from './components/PlanApproval';
 import FactVerification from './components/FactVerification';
@@ -9,12 +11,13 @@ import './App.css';
 function App() {
   const [sessionId, setSessionId] = useState(null);
   const [ws, setWs] = useState(null);
-  const [status, setStatus] = useState('idle'); // idle, running, waiting_plan, waiting_approval, waiting_facts, complete
+  const [status, setStatus] = useState('idle'); // idle, running, waiting_research_plan, waiting_plan, waiting_approval, waiting_facts, complete
   const [currentNode, setCurrentNode] = useState('');
   const [completedNodes, setCompletedNodes] = useState([]);
   const [checkpoint, setCheckpoint] = useState(null);
   const [checkpointData, setCheckpointData] = useState(null);
   const [logs, setLogs] = useState([]);
+  const [nodeTraces, setNodeTraces] = useState({});
   const [completedBrief, setCompletedBrief] = useState(null);
   const [showOutputModal, setShowOutputModal] = useState(false);
 
@@ -72,7 +75,7 @@ function App() {
         break;
 
       case 'node_complete':
-        addLog(`✓ Node completed: ${message.node}`, 'success');
+        addLog(`Node completed: ${message.node}`, 'success');
         setCurrentNode(message.state?.current_node || message.node);
         // Add to completed nodes if not already there
         setCompletedNodes(prev => {
@@ -81,15 +84,24 @@ function App() {
           }
           return prev;
         });
+        // Store trace data for this node
+        if (message.trace) {
+          setNodeTraces(prev => ({
+            ...prev,
+            [message.node]: message.trace
+          }));
+        }
         break;
 
       case 'hitl_required':
-        addLog(`⏸ Waiting for human input: ${message.checkpoint}`, 'warning');
+        addLog(`Waiting for human input: ${message.checkpoint}`, 'warning');
         setCheckpoint(message.checkpoint);
         setCheckpointData(message.data);
 
         // Set appropriate status based on checkpoint type
-        if (message.checkpoint === 'plan_review') {
+        if (message.checkpoint === 'research_plan') {
+          setStatus('waiting_research_plan');
+        } else if (message.checkpoint === 'plan_review') {
           setStatus('waiting_plan');
         } else if (message.checkpoint === 'plan_approval') {
           setStatus('waiting_approval');
@@ -99,7 +111,7 @@ function App() {
         break;
 
       case 'complete':
-        addLog('✓ Research complete!', 'success');
+        addLog('Research complete!', 'success');
         setStatus('complete');
         setCompletedBrief(message.brief_content || message.brief_preview);
         setShowOutputModal(true);
@@ -153,7 +165,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>🎓 Lecture Assistant Agent</h1>
+        <h1>Lecture Assistant Agent</h1>
         <p>LangGraph + Human-in-the-Loop Research System</p>
       </header>
 
@@ -161,6 +173,15 @@ function App() {
         <div className="main-panel">
           {status === 'idle' && (
             <InputForm onSubmit={startResearch} />
+          )}
+
+          {status === 'waiting_research_plan' && checkpointData && (
+            <ResearchPlanReview
+              researchPlan={checkpointData.research_plan}
+              onSubmit={(decision, comments) =>
+                submitFeedback('research_plan', decision, comments)
+              }
+            />
           )}
 
           {status === 'waiting_plan' && checkpointData && (
@@ -193,7 +214,7 @@ function App() {
 
           {status === 'running' && (
             <div className="status-panel">
-              <h2>🔄 Research in Progress</h2>
+              <h2>Research in Progress</h2>
               <p className="current-node">Current node: <strong>{currentNode}</strong></p>
               <div className="spinner"></div>
             </div>
@@ -201,7 +222,7 @@ function App() {
 
           {status === 'complete' && !showOutputModal && (
             <div className="complete-panel">
-              <h2>✅ Research Complete!</h2>
+              <h2>Research Complete</h2>
               <p>Your research brief has been generated.</p>
               <button onClick={() => setShowOutputModal(true)} className="btn-primary">
                 View Output
@@ -214,7 +235,12 @@ function App() {
         </div>
 
         <div className="side-panel">
-          <ProgressTracker logs={logs} currentNode={currentNode} completedNodes={completedNodes} />
+          <ProgressTracker
+            logs={logs}
+            currentNode={currentNode}
+            completedNodes={completedNodes}
+            nodeTraces={nodeTraces}
+          />
         </div>
       </div>
 
@@ -223,17 +249,19 @@ function App() {
         <div className="modal-overlay" onClick={() => setShowOutputModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>📄 Research Brief Output</h2>
+              <h2>Research Brief Output</h2>
               <button className="modal-close" onClick={() => setShowOutputModal(false)}>
                 ×
               </button>
             </div>
             <div className="modal-body">
-              <pre className="output-content">{completedBrief}</pre>
+              <div className="markdown-content">
+                <ReactMarkdown>{completedBrief}</ReactMarkdown>
+              </div>
             </div>
             <div className="modal-footer">
               <button onClick={downloadBrief} className="btn-primary">
-                📥 Download Brief
+                Download Brief
               </button>
               <button onClick={() => setShowOutputModal(false)} className="btn-secondary">
                 Close

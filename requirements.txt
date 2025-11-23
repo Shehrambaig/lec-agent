@@ -98,7 +98,7 @@ tiktoken==0.12.0
 tqdm==4.67.1
 trimesh==4.9.0
 typer==0.12.4
-typing-inspection==0.10.0
+typing-inspection==0.4.2
 typing_extensions==4.12.2
 tzdata==2025.2
 uritemplate==4.2.0

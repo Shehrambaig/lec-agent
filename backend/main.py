@@ -108,9 +108,22 @@ def extract_node_trace(node_name: str, state: ResearchState) -> dict:
 app = FastAPI(title="Lecture Assistant Agent API")
 
 # CORS middleware for frontend communication
+import os
+FRONTEND_URL = os.getenv("FRONTEND_URL", "")
+allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+# Add production frontend URL if set
+if FRONTEND_URL:
+    allowed_origins.append(FRONTEND_URL)
+# Also allow any .onrender.com subdomain
+allowed_origins.append("https://*.onrender.com")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -8,6 +8,10 @@ import FactVerification from './components/FactVerification';
 import ProgressTracker from './components/ProgressTracker';
 import './App.css';
 
+// API configuration - uses environment variable in production
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+
 function App() {
   const [sessionId, setSessionId] = useState(null);
   const [ws, setWs] = useState(null);
@@ -30,7 +34,7 @@ function App() {
       addLog(`Starting research on: ${topic}`, 'info');
 
       // Create session
-      const response = await fetch('http://localhost:8000/research/start', {
+      const response = await fetch(`${API_URL}/research/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic })
@@ -41,7 +45,7 @@ function App() {
       addLog(`Session created: ${data.session_id}`, 'success');
 
       // Connect WebSocket
-      const websocket = new WebSocket(`ws://localhost:8000/ws/${data.session_id}`);
+      const websocket = new WebSocket(`${WS_URL}/ws/${data.session_id}`);
 
       websocket.onopen = () => {
         addLog('WebSocket connected', 'success');
@@ -127,7 +131,7 @@ function App() {
     try {
       addLog(`Submitting feedback: ${decision}`, 'info');
 
-      const response = await fetch('http://localhost:8000/research/feedback', {
+      const response = await fetch(`${API_URL}/research/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

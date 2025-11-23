@@ -32,10 +32,11 @@ class DraftPlan(BaseModel):
 
 class HumanFeedback(BaseModel):
     """Feedback from human-in-the-loop checkpoint."""
-    checkpoint_type: str  # "plan_review" or "fact_verification"
-    decision: str  # "approve", "request_more_sources", "emphasize_topic", "rework"
+    checkpoint_type: str  # "plan_review", "plan_approval", or "fact_verification"
+    decision: str  # "approve", "request_more_sources", "emphasize_topic", "rework", "reject"
     comments: Optional[str] = None
     emphasis_areas: Optional[List[str]] = None
+    timestamp: datetime = Field(default_factory=datetime.now)
 
 
 class ResearchState(BaseModel):
@@ -53,12 +54,13 @@ class ResearchState(BaseModel):
 
     # Planning & Synthesis
     draft_plan: Optional[DraftPlan] = None
-    human_feedback_plan: Optional[HumanFeedback] = None
+    human_feedback_plan: Optional[HumanFeedback] = None  # Feedback on facts before synthesis
+    human_feedback_approval: Optional[HumanFeedback] = None  # Feedback on generated plan
     refined_plan: Optional[DraftPlan] = None
 
     # Fact Verification
     facts_for_verification: List[ExtractedClaim] = []
-    human_feedback_facts: Optional[HumanFeedback] = None
+    human_feedback_facts: Optional[HumanFeedback] = None  # Feedback on facts after refinement
 
     # Final Output
     final_brief: Optional[str] = None

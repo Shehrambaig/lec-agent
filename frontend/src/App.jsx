@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import InputForm from './components/InputForm';
 import PlanReview from './components/PlanReview';
+import PlanApproval from './components/PlanApproval';
 import FactVerification from './components/FactVerification';
 import ProgressTracker from './components/ProgressTracker';
 import './App.css';
@@ -8,7 +9,7 @@ import './App.css';
 function App() {
   const [sessionId, setSessionId] = useState(null);
   const [ws, setWs] = useState(null);
-  const [status, setStatus] = useState('idle'); // idle, running, waiting_plan, waiting_facts, complete
+  const [status, setStatus] = useState('idle'); // idle, running, waiting_plan, waiting_approval, waiting_facts, complete
   const [currentNode, setCurrentNode] = useState('');
   const [completedNodes, setCompletedNodes] = useState([]);
   const [checkpoint, setCheckpoint] = useState(null);
@@ -24,41 +25,41 @@ function App() {
   const startResearch = async (topic) => {
     try {
       addLog(`Starting research on: ${topic}`, 'info');
-      
+
       // Create session
       const response = await fetch('http://localhost:8000/research/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic })
       });
-      
+
       const data = await response.json();
       setSessionId(data.session_id);
       addLog(`Session created: ${data.session_id}`, 'success');
-      
+
       // Connect WebSocket
       const websocket = new WebSocket(`ws://localhost:8000/ws/${data.session_id}`);
-      
+
       websocket.onopen = () => {
         addLog('WebSocket connected', 'success');
         setStatus('running');
       };
-      
+
       websocket.onmessage = (event) => {
         const message = JSON.parse(event.data);
         handleWebSocketMessage(message);
       };
-      
+
       websocket.onerror = (error) => {
         addLog('WebSocket error: ' + error, 'error');
       };
-      
+
       websocket.onclose = () => {
         addLog('WebSocket closed', 'info');
       };
-      
+
       setWs(websocket);
-      
+
     } catch (error) {
       addLog(`Error: ${error.message}`, 'error');
     }
@@ -69,10 +70,10 @@ function App() {
       case 'status':
         addLog(message.message, 'info');
         break;
-        
+
       case 'node_complete':
         addLog(`✓ Node completed: ${message.node}`, 'success');
-        setCurrentNode(message.state.current_node);
+        setCurrentNode(message.state?.current_node || message.node);
         // Add to completed nodes if not already there
         setCompletedNodes(prev => {
           if (!prev.includes(message.node)) {
@@ -81,21 +82,29 @@ function App() {
           return prev;
         });
         break;
-        
+
       case 'hitl_required':
         addLog(`⏸ Waiting for human input: ${message.checkpoint}`, 'warning');
         setCheckpoint(message.checkpoint);
         setCheckpointData(message.data);
-        setStatus(message.checkpoint === 'plan_review' ? 'waiting_plan' : 'waiting_facts');
+
+        // Set appropriate status based on checkpoint type
+        if (message.checkpoint === 'plan_review') {
+          setStatus('waiting_plan');
+        } else if (message.checkpoint === 'plan_approval') {
+          setStatus('waiting_approval');
+        } else if (message.checkpoint === 'fact_verification') {
+          setStatus('waiting_facts');
+        }
         break;
-        
+
       case 'complete':
         addLog('✓ Research complete!', 'success');
         setStatus('complete');
         setCompletedBrief(message.brief_content || message.brief_preview);
         setShowOutputModal(true);
         break;
-        
+
       case 'error':
         addLog(`Error: ${message.message}`, 'error');
         break;
@@ -155,19 +164,28 @@ function App() {
           )}
 
           {status === 'waiting_plan' && checkpointData && (
-            <PlanReview 
+            <PlanReview
               draftPlan={checkpointData.draft_plan}
               facts={checkpointData.facts_for_verification}
-              onSubmit={(decision, comments, emphasisAreas) => 
+              onSubmit={(decision, comments, emphasisAreas) =>
                 submitFeedback('plan_review', decision, comments, emphasisAreas)
               }
             />
           )}
 
+          {status === 'waiting_approval' && checkpointData && (
+            <PlanApproval
+              draftPlan={checkpointData.draft_plan}
+              onSubmit={(decision, comments) =>
+                submitFeedback('plan_approval', decision, comments)
+              }
+            />
+          )}
+
           {status === 'waiting_facts' && checkpointData && (
-            <FactVerification 
+            <FactVerification
               facts={checkpointData.facts}
-              onSubmit={(decision, comments) => 
+              onSubmit={(decision, comments) =>
                 submitFeedback('fact_verification', decision, comments)
               }
             />

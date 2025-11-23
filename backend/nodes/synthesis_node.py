@@ -122,9 +122,9 @@ def synthesis_node(state: ResearchState) -> ResearchState:
             key_points=[claim.claim[:100] for claim in state.prioritized_claims[:5]]
         )
 
-    # Mark that we need human input
-    state.requires_human_input = True
-    state.checkpoint_id = "plan_review"
+    # DO NOT set requires_human_input here!
+    # The interrupt happens automatically due to interrupt_before=["refine"]
+    # The graph will pause BEFORE the refine node runs
 
     # Update state
     state.current_node = "synthesis"
@@ -145,6 +145,6 @@ def synthesis_node(state: ResearchState) -> ResearchState:
     )
 
     print(f"✓ Synthesis completed: Draft plan created with {len(state.draft_plan.sections)} sections")
-    print(f"⏸ Waiting for human review of plan...")
+    print(f"⏸ Graph will now pause for plan approval (automatic interrupt before 'refine')")
 
     return state

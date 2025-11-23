@@ -11,7 +11,6 @@ from backend.state import ResearchState, HumanFeedback
 from backend.graph import research_graph
 from langgraph.checkpoint.memory import MemorySaver
 
-
 app = FastAPI(title="Lecture Assistant Agent API")
 
 # CORS middleware for frontend communication
@@ -164,7 +163,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                 next_node = next_nodes[0] if next_nodes else None
                 print(f"📍 Next node to execute: {next_node}")
 
-                # Handle plan review interrupt (before synthesize)
+                # ========================================
+                # FIRST INTERRUPT: Plan Review (before synthesize)
+                # ========================================
                 if next_node == "synthesize":
                     print("⏸ Paused before synthesis - requesting plan review")
 
@@ -195,8 +196,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     }
 
                     await send_message(hitl_message)
-
-                    # Give the frontend a moment to process the message
                     await asyncio.sleep(0.1)
 
                     exec_context["status"] = "waiting_plan_review"
@@ -208,7 +207,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                         await asyncio.sleep(0.5)
                         timeout += 1
 
-                        # Print status every 10 seconds
                         if timeout % 20 == 0:
                             print(f"⏳ Still waiting for feedback... ({timeout // 2}s elapsed)")
 
@@ -227,7 +225,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                         config,
                         {
                             "human_feedback_plan": state.human_feedback_plan
-                        }
+                        },
+                        as_node="prioritize"
                     )
 
                     # Resume execution from synthesis
@@ -245,100 +244,217 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                             "node": resume_node
                         })
 
-                    # Check for second interrupt (fact verification)
-                    print("🔍 Checking for second interrupt...")
+                    # ========================================
+                    # SECOND INTERRUPT: Plan Approval (before refine)
+                    # ========================================
+                    print("🔍 Checking for second interrupt (plan approval)...")
                     current_graph_state = research_graph.get_state(config)
 
                     if current_graph_state.next:
                         next_nodes = current_graph_state.next if isinstance(current_graph_state.next, tuple) else (
                             current_graph_state.next,)
                         next_node = next_nodes[0] if next_nodes else None
-                        print(f"📍 Next node after resume: {next_node}")
+                        print(f"📍 Next node after synthesis: {next_node}")
 
-                        # Handle fact verification interrupt
-                        if next_node == "brief":
-                            # Check if refine node set the fact verification flag
+                        # Handle plan approval interrupt (BEFORE refine runs)
+                        if next_node == "refine":
+                            print("⏸ Graph paused before refine - checking for plan approval")
+
                             state_values = current_graph_state.values
-                            requires_verification = state_values.get("requires_human_input", False)
-                            checkpoint_id = state_values.get("checkpoint_id")
+                            draft_plan = state_values.get("draft_plan")
 
-                            if requires_verification and checkpoint_id == "fact_verification":
-                                print("⏸ Paused for fact verification")
+                            # ALWAYS ask for approval when we have a draft plan
+                            if draft_plan:
+                                print("⏸ Requesting plan approval from user")
 
-                                facts = state_values.get("facts_for_verification", [])
+                                # Convert draft_plan to string if it's an object
+                                if hasattr(draft_plan, 'dict'):
+                                    plan_dict = draft_plan.dict()
+                                    draft_plan_str = f"""
+Introduction:
+{plan_dict.get('introduction', 'N/A')}
 
-                                # Convert facts to serializable format
-                                serialized_facts = []
-                                for fact in (facts[:6] if isinstance(facts, list) else []):
-                                    try:
-                                        serialized_facts.append({
-                                            "claim": fact.claim if hasattr(fact, 'claim') else str(fact),
-                                            "source": fact.source if hasattr(fact, 'source') else "",
-                                            "confidence": fact.confidence if hasattr(fact, 'confidence') else 0.0
-                                        })
-                                    except Exception as e:
-                                        print(f"⚠️ Error serializing fact: {e}")
+Sections:
+{chr(10).join([f"{i + 1}. {s.get('title', 'Untitled')}: {s.get('content', 'No content')}" for i, s in enumerate(plan_dict.get('sections', []))])}
 
-                                print(f"📋 Sending {len(serialized_facts)} facts for verification")
+Key Points:
+{chr(10).join([f"• {point}" for point in plan_dict.get('key_points', [])])}
+
+Time Allocation:
+{chr(10).join([f"• {k}: {v} minutes" for k, v in plan_dict.get('time_allocation', {}).items()])}
+"""
+                                else:
+                                    draft_plan_str = str(draft_plan)
 
                                 await send_message({
                                     "type": "hitl_required",
-                                    "checkpoint": "fact_verification",
+                                    "checkpoint": "plan_approval",
                                     "data": {
-                                        "facts": serialized_facts
+                                        "draft_plan": draft_plan_str
                                     }
                                 })
 
-                                # Give the frontend a moment to process
                                 await asyncio.sleep(0.1)
 
-                                exec_context["status"] = "waiting_fact_verification"
-                                print("⏳ Waiting for fact verification feedback...")
+                                exec_context["status"] = "waiting_plan_approval"
+                                print("⏳ Waiting for plan approval...")
 
-                                # Wait for feedback
+                                # Wait for approval feedback
                                 timeout = 0
-                                while exec_context["status"] == "waiting_fact_verification" and timeout < 600:
+                                while exec_context["status"] == "waiting_plan_approval" and timeout < 600:
                                     await asyncio.sleep(0.5)
                                     timeout += 1
 
-                                    # Print status every 10 seconds
                                     if timeout % 20 == 0:
-                                        print(f"⏳ Still waiting for feedback... ({timeout // 2}s elapsed)")
+                                        print(f"⏳ Still waiting for approval... ({timeout // 2}s elapsed)")
 
                                 if timeout >= 600:
-                                    print("⏰ Timeout waiting for fact verification")
+                                    print("⏰ Timeout waiting for plan approval")
                                     await send_message(
-                                        {"type": "error", "message": "Timeout waiting for fact verification"})
+                                        {"type": "error", "message": "Timeout waiting for plan approval"})
                                     return
 
                                 state = exec_context["state"]
-                                feedback_decision = state.human_feedback_facts.decision if state.human_feedback_facts else 'None'
-                                print(f"✓ Fact verification feedback received: {feedback_decision}")
+                                approval_decision = state.human_feedback_approval.decision if state.human_feedback_approval else 'None'
+                                print(f"✓ Plan approval received: {approval_decision}")
 
-                                # Update graph state with feedback and clear flags
+                                # Update graph state with approval feedback
                                 research_graph.update_state(
                                     config,
                                     {
-                                        "human_feedback_facts": state.human_feedback_facts,
-                                        "requires_human_input": False,
-                                        "checkpoint_id": None
-                                    }
+                                        "human_feedback_approval": state.human_feedback_approval
+                                    },
+                                    as_node="synthesize",
                                 )
 
-                                # Resume final execution
-                                print("▶ Resuming graph to completion...")
-                                async for final_event in research_graph.astream(None, config, stream_mode="updates"):
-                                    final_node = list(final_event.keys())[0]
-                                    final_state = final_event.get(final_node, {})
+                                # Resume from refine
+                                print("▶ Resuming graph from refine...")
+                                async for refine_event in research_graph.astream(None, config, stream_mode="updates"):
+                                    refine_node = list(refine_event.keys())[0]
+                                    refine_state = refine_event.get(refine_node, {})
 
-                                    if isinstance(final_state, ResearchState):
-                                        state = final_state
+                                    if isinstance(refine_state, ResearchState):
+                                        state = refine_state
                                         exec_context["state"] = state
 
                                     await send_message({
                                         "type": "node_complete",
-                                        "node": final_node
+                                        "node": refine_node
                                     })
+
+                                # ========================================
+                                # THIRD INTERRUPT: Fact Verification (before brief)
+                                # ========================================
+                                print("🔍 Checking for third interrupt (fact verification)...")
+                                current_graph_state = research_graph.get_state(config)
+
+                                if current_graph_state.next:
+                                    next_nodes = current_graph_state.next if isinstance(current_graph_state.next,
+                                                                                        tuple) else (
+                                        current_graph_state.next,)
+                                    next_node = next_nodes[0] if next_nodes else None
+                                    print(f"📍 Next node after refine: {next_node}")
+
+                                    if next_node == "brief":
+                                        state_values = current_graph_state.values
+                                        requires_verification = state_values.get("requires_human_input", False)
+                                        checkpoint_id = state_values.get("checkpoint_id")
+
+                                        if requires_verification and checkpoint_id == "fact_verification":
+                                            print("⏸ Paused for fact verification")
+
+                                            facts = state_values.get("facts_for_verification", [])
+
+                                            serialized_facts = []
+                                            for fact in (facts[:6] if isinstance(facts, list) else []):
+                                                try:
+                                                    serialized_facts.append({
+                                                        "claim": fact.claim if hasattr(fact, 'claim') else str(fact),
+                                                        "source": fact.source if hasattr(fact, 'source') else "",
+                                                        "confidence": fact.confidence if hasattr(fact,
+                                                                                                 'confidence') else 0.0
+                                                    })
+                                                except Exception as e:
+                                                    print(f"⚠️ Error serializing fact: {e}")
+
+                                            print(f"📋 Sending {len(serialized_facts)} facts for verification")
+
+                                            await send_message({
+                                                "type": "hitl_required",
+                                                "checkpoint": "fact_verification",
+                                                "data": {
+                                                    "facts": serialized_facts
+                                                }
+                                            })
+
+                                            await asyncio.sleep(0.1)
+
+                                            exec_context["status"] = "waiting_fact_verification"
+                                            print("⏳ Waiting for fact verification feedback...")
+
+                                            timeout = 0
+                                            while exec_context[
+                                                "status"] == "waiting_fact_verification" and timeout < 600:
+                                                await asyncio.sleep(0.5)
+                                                timeout += 1
+
+                                                if timeout % 20 == 0:
+                                                    print(f"⏳ Still waiting for feedback... ({timeout // 2}s elapsed)")
+
+                                            if timeout >= 600:
+                                                print("⏰ Timeout waiting for fact verification")
+                                                await send_message(
+                                                    {"type": "error",
+                                                     "message": "Timeout waiting for fact verification"})
+                                                return
+
+                                            state = exec_context["state"]
+                                            feedback_decision = state.human_feedback_facts.decision if state.human_feedback_facts else 'None'
+                                            print(f"✓ Fact verification feedback received: {feedback_decision}")
+
+                                            # Update graph state and resume final execution
+                                            research_graph.update_state(
+                                                config,
+                                                {
+                                                    "human_feedback_facts": state.human_feedback_facts,
+                                                    "requires_human_input": False,
+                                                    "checkpoint_id": None
+                                                },
+                                                as_node="refine"
+                                            )
+
+                                            print("▶ Resuming graph to completion...")
+                                            async for final_event in research_graph.astream(None, config,
+                                                                                            stream_mode="updates"):
+                                                final_node = list(final_event.keys())[0]
+                                                final_state = final_event.get(final_node, {})
+
+                                                if isinstance(final_state, ResearchState):
+                                                    state = final_state
+                                                    exec_context["state"] = state
+
+                                                await send_message({
+                                                    "type": "node_complete",
+                                                    "node": final_node
+                                                })
+                                        else:
+                                            # No fact verification needed, just continue to completion
+                                            print("▶ No fact verification needed, resuming to completion...")
+                                            async for final_event in research_graph.astream(None, config,
+                                                                                            stream_mode="updates"):
+                                                final_node = list(final_event.keys())[0]
+                                                final_state = final_event.get(final_node, {})
+
+                                                if isinstance(final_state, ResearchState):
+                                                    state = final_state
+                                                    exec_context["state"] = state
+
+                                                await send_message({
+                                                    "type": "node_complete",
+                                                    "node": final_node
+                                                })
+                            else:
+                                print("⚠️ No draft plan found, skipping approval")
 
             print("✅ Graph execution completed")
 
@@ -355,16 +471,46 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
         # Send completion
         # Send completion
         brief_content = ""
+
+        # Try to get the brief content from various possible fields
         if hasattr(state, 'formatted_brief') and state.formatted_brief:
             brief_content = state.formatted_brief
+            print(f"📄 Using formatted_brief: {len(brief_content)} chars")
         elif hasattr(state, 'final_brief') and state.final_brief:
             brief_content = state.final_brief
+            print(f"📄 Using final_brief: {len(brief_content)} chars")
+        else:
+            # Try to read from the saved file as fallback
+            print("⚠️ Brief not found in state, attempting to read from saved file...")
+            try:
+                import os
+                import glob
+
+                # Find the most recent brief file
+                output_files = glob.glob("outputs/brief_*.md")
+                if output_files:
+                    latest_file = max(output_files, key=os.path.getctime)
+                    with open(latest_file, 'r', encoding='utf-8') as f:
+                        brief_content = f.read()
+                    print(f"📄 Read brief from file: {latest_file} ({len(brief_content)} chars)")
+                else:
+                    print("⚠️ No brief files found in outputs folder")
+            except Exception as e:
+                print(f"❌ Error reading brief file: {e}")
 
         print(f"📄 Sending completion with brief length: {len(brief_content) if brief_content else 0}")
 
+        if not brief_content:
+            # Debug: print what's actually in the state
+            print("🔍 DEBUG - State contents:")
+            print(
+                f"  - formatted_brief: {getattr(state, 'formatted_brief', 'NOT SET')[:100] if hasattr(state, 'formatted_brief') else 'MISSING'}")
+            print(
+                f"  - final_brief: {getattr(state, 'final_brief', 'NOT SET')[:100] if hasattr(state, 'final_brief') else 'MISSING'}")
+
         await send_message({
             "type": "complete",
-            "message": "Research brief generated successfully",
+            "message": "Research brief generated successfully" if brief_content else "Brief saved to outputs folder",
             "brief_content": brief_content if brief_content else "Brief generation completed. Check the outputs folder for the saved file."
         })
 
@@ -381,6 +527,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
         if session_id in active_connections:
             del active_connections[session_id]
             print(f"🧹 Cleaned up connection: {session_id}")
+
 
 @app.post("/research/feedback")
 async def submit_feedback(request: HumanFeedbackRequest):
@@ -408,10 +555,17 @@ async def submit_feedback(request: HumanFeedbackRequest):
         state.human_feedback_plan = feedback
         state.requires_human_input = False
         exec_context["status"] = "processing"
+        print(f"📝 Plan review feedback received: {request.decision}")
+    elif request.checkpoint_type == "plan_approval":
+        state.human_feedback_approval = feedback
+        state.requires_human_input = False
+        exec_context["status"] = "processing"
+        print(f"📝 Plan approval feedback received: {request.decision}")
     elif request.checkpoint_type == "fact_verification":
         state.human_feedback_facts = feedback
         state.requires_human_input = False
         exec_context["status"] = "processing"
+        print(f"📝 Fact verification feedback received: {request.decision}")
 
     exec_context["state"] = state
 

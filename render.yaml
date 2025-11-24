@@ -9,11 +9,13 @@ services:
       - key: PYTHON_VERSION
         value: "3.11.11"
       - key: OPENAI_API_KEY
-        sync: false  # You'll set this in Render dashboard
+        sync: false
       - key: GOOGLE_API_KEY
         sync: false
       - key: GOOGLE_CSE_ID
         sync: false
+      - key: FRONTEND_URL
+        value: "https://lecture-assistant-frontend.onrender.com"
 
   # Frontend Static Site
   - type: web
@@ -28,3 +30,7 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "18"
+      - key: VITE_API_URL
+        value: "https://lecture-assistant-api.onrender.com"
+      - key: VITE_WS_URL
+        value: "wss://lecture-assistant-api.onrender.com"

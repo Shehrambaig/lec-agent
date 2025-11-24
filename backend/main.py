@@ -109,16 +109,15 @@ app = FastAPI(title="Lecture Assistant Agent API")
 
 # CORS middleware for frontend communication
 import os
-FRONTEND_URL = os.getenv("FRONTEND_URL", "")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://lecture-assistant-frontend.onrender.com")
 allowed_origins = [
     "http://localhost:5173",
     "http://localhost:3000",
+    "https://lecture-assistant-frontend.onrender.com",
 ]
 # Add production frontend URL if set
-if FRONTEND_URL:
+if FRONTEND_URL and FRONTEND_URL not in allowed_origins:
     allowed_origins.append(FRONTEND_URL)
-# Also allow any .onrender.com subdomain
-allowed_origins.append("https://*.onrender.com")
 
 app.add_middleware(
     CORSMiddleware,

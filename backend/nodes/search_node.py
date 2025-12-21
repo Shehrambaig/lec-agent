@@ -7,37 +7,24 @@ from backend.logger import execution_logger
 
 def search_node(state: ResearchState) -> ResearchState:
     """
-    Search node: Generate search queries and perform web searches.
-    
+    Search node: Use approved research plan queries to perform web searches.
+
     This node:
-    - Uses LLM to generate targeted search queries
+    - Uses the search queries from the approved research plan
     - Performs Google searches
     - Collects and structures results
     - Creates citation objects
     """
     start_time = time.time()
-    
-    # Load prompt template
-    prompt_template = load_prompt("search_prompt")
-    prompt = prompt_template.format(topic=state.topic)
-    
-    # Generate search queries using LLM
-    print(f"⚙ Generating search queries for: {state.topic}")
-    queries_response = call_openai(prompt, max_tokens=500)
-    
-    # Parse queries
-    try:
-        # Try to extract JSON from response
-        queries_str = queries_response.strip()
-        if "```json" in queries_str:
-            queries_str = queries_str.split("```json")[1].split("```")[0].strip()
-        elif "```" in queries_str:
-            queries_str = queries_str.split("```")[1].split("```")[0].strip()
-        
-        search_queries = json.loads(queries_str)
-    except json.JSONDecodeError:
-        # Fallback: use topic-based queries
-        print("⚠ Failed to parse LLM queries, using fallback")
+
+    # Use search queries from the approved research plan
+    if state.research_plan and state.research_plan.search_queries:
+        search_queries = state.research_plan.search_queries
+        print(f"⚙ Using approved research plan queries for: {state.topic}")
+        print(f"  📋 Plan revision: #{state.research_plan.revision_count}")
+    else:
+        # Fallback: generate queries if no research plan exists
+        print(f"⚠ No research plan found, generating fallback queries for: {state.topic}")
         search_queries = [
             state.topic,
             f"{state.topic} research papers",
@@ -45,9 +32,9 @@ def search_node(state: ResearchState) -> ResearchState:
             f"{state.topic} industry applications",
             f"{state.topic} expert analysis"
         ]
-    
+
     state.search_queries = search_queries
-    print(f"✓ Generated {len(search_queries)} search queries")
+    print(f"✓ Using {len(search_queries)} search queries from approved plan")
     
     # Perform searches
     all_results = []
@@ -82,8 +69,11 @@ def search_node(state: ResearchState) -> ResearchState:
     execution_time = (time.time() - start_time) * 1000
     execution_logger.log_node_execution(
         node_name="search_node",
-        inputs={"topic": state.topic},
-        prompt=prompt,
+        inputs={
+            "topic": state.topic,
+            "plan_revision": state.research_plan.revision_count if state.research_plan else 0
+        },
+        prompt="Using approved research plan queries",
         output={
             "queries": search_queries,
             "results_count": len(all_results),

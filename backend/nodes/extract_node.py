@@ -25,10 +25,25 @@ def extract_node(state: ResearchState) -> ResearchState:
         results_summary += f"Snippet: {result['snippet']}\n"
         results_summary += f"Citation ID: {result['citation_id']}\n"
     
+    # Prepare research angles from the approved plan
+    research_angles_text = ""
+    if state.research_plan and state.research_plan.research_angles:
+        research_angles_text = "\nRESEARCH ANGLES TO COVER:\n"
+        for idx, angle in enumerate(state.research_plan.research_angles, 1):
+            # Handle both dict and object formats
+            if isinstance(angle, dict):
+                title = angle.get('title', '')
+                desc = angle.get('description', '')
+            else:
+                title = angle.title
+                desc = angle.description
+            research_angles_text += f"{idx}. {title}: {desc}\n"
+
     # Load prompt template
     prompt_template = load_prompt("extract_prompt")
     prompt = prompt_template.format(
         topic=state.topic,
+        research_angles=research_angles_text,
         search_results=results_summary
     )
     

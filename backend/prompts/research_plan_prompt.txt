@@ -4,6 +4,8 @@ TOPIC: {topic}
 
 {revision_section}
 
+IMPORTANT: If there is revision feedback above, you MUST incorporate it into your plan. The human reviewer's feedback is critical and must be addressed in your search queries and research angles.
+
 Create a detailed research action plan that outlines HOW you will conduct the research. This plan will be reviewed by a human before any searches are executed.
 
 Your plan should include:

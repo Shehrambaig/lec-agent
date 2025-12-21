@@ -23,15 +23,26 @@ def research_plan_node(state: ResearchState) -> ResearchState:
     revision_section = ""
     if state.human_feedback_research_plan and state.human_feedback_research_plan.decision == "revise":
         revision_count = state.research_plan.revision_count + 1 if state.research_plan else 1
+        feedback_text = state.human_feedback_research_plan.comments or 'No specific feedback provided'
         revision_section = f"""
-REVISION REQUEST (Attempt #{revision_count}):
-The human reviewer has requested changes to the research plan.
-Feedback: {state.human_feedback_research_plan.comments or 'No specific feedback provided'}
+============================================================
+REVISION REQUEST (Attempt #{revision_count})
+============================================================
 
-Please revise your research plan based on this feedback. Consider:
-- Adjusting search queries to better address the feedback
-- Adding or modifying research angles as suggested
-- Ensuring the plan addresses any concerns raised
+The human reviewer has requested changes to the research plan.
+
+USER FEEDBACK:
+"{feedback_text}"
+
+INSTRUCTIONS FOR REVISION:
+1. Carefully read the user feedback above
+2. Modify your search queries to directly address what the user is asking for
+3. Add new research angles if the feedback suggests new areas to explore
+4. If the user mentions comparisons, contrasts, or additional topics, explicitly include them
+5. Make sure the revised plan clearly shows how you're addressing the feedback
+
+REMEMBER: The user feedback is the most important input. Your revised plan must show clear changes based on their comments.
+============================================================
 """
     else:
         revision_section = ""

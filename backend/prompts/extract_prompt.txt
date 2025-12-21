@@ -2,10 +2,16 @@ You are extracting factual claims from search results for a lecture on:
 
 TOPIC: {topic}
 
+{research_angles}
+
 SEARCH RESULTS:
 {search_results}
 
-Extract 8-12 key factual claims that would be valuable for the lecture. For each claim:
+Extract 8-12 key factual claims that would be valuable for the lecture.
+
+IMPORTANT: If research angles mention comparisons, contrasts, or multiple regions/entities, make sure to extract claims covering ALL of them, not just the primary topic. For example, if comparing AI in Pakistan vs India, extract claims about BOTH countries.
+
+For each claim:
 1. State the claim clearly and concisely
 2. Note the source (title of the article/paper)
 3. Include the Citation ID from the search result where you found this claim

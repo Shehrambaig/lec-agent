@@ -24,6 +24,7 @@ function App() {
   const [nodeTraces, setNodeTraces] = useState({});
   const [completedBrief, setCompletedBrief] = useState(null);
   const [showOutputModal, setShowOutputModal] = useState(false);
+  const [slidesFile, setSlidesFile] = useState(null);
 
   const addLog = (message, type = 'info') => {
     setLogs(prev => [...prev, { message, type, timestamp: new Date().toISOString() }]);
@@ -118,6 +119,7 @@ function App() {
         addLog('Research complete!', 'success');
         setStatus('complete');
         setCompletedBrief(message.brief_content || message.brief_preview);
+        setSlidesFile(message.slides_file || null);
         setShowOutputModal(true);
         break;
 
@@ -164,6 +166,21 @@ function App() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const downloadSlides = () => {
+    if (!slidesFile) {
+      addLog('No slides file available', 'error');
+      return;
+    }
+
+    // Extract filename from path (e.g., "outputs/slides_topic_timestamp.pptx" -> "slides_topic_timestamp.pptx")
+    const filename = slidesFile.split('/').pop();
+
+    // Open download URL in new tab
+    const downloadUrl = `${API_URL}/download/slides/${filename}`;
+    window.open(downloadUrl, '_blank');
+    addLog('Downloading slides...', 'success');
   };
 
   return (
@@ -265,8 +282,13 @@ function App() {
             </div>
             <div className="modal-footer">
               <button onClick={downloadBrief} className="btn-primary">
-                Download Brief
+                Download Brief (.md)
               </button>
+              {slidesFile && (
+                <button onClick={downloadSlides} className="btn-primary">
+                  Download Slides (.pptx)
+                </button>
+              )}
               <button onClick={() => setShowOutputModal(false)} className="btn-secondary">
                 Close
               </button>

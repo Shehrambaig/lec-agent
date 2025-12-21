@@ -79,6 +79,8 @@ class ResearchState(BaseModel):
     # Final Output
     final_brief: Optional[str] = None
     formatted_brief: Optional[str] = None
+    slides_file_path: Optional[str] = None
+    slides_data: Optional[Any] = None
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)

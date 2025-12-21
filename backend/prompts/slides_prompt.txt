@@ -1,0 +1,118 @@
+You are creating a comprehensive PowerPoint presentation for a 60-90 minute lecture on:
+
+TOPIC: {topic}
+
+REFINED LECTURE PLAN:
+{refined_plan}
+
+VERIFIED RESEARCH FINDINGS:
+{verified_claims}
+
+ALL CITATIONS:
+{citations}
+
+Create a presentation with 15-20 slides. Each slide must contain enough content to support 3-5 minutes of explanation during the lecture.
+
+OUTPUT FORMAT: Return your response as a JSON array of slide objects. Each slide object must have:
+- slide_number: integer
+- title: string (clear, engaging title)
+- content: array of strings (detailed bullet points, 4-6 per slide)
+- speaker_notes: string (detailed talking points for 3-5 minutes, including examples and explanations)
+- slide_type: string (one of: "title", "content", "key_findings", "case_study", "risks", "conclusion")
+
+SLIDE STRUCTURE REQUIREMENTS:
+
+Slide 1 (Title Slide):
+- Title: [Engaging lecture title based on topic]
+- Subtitle with key theme
+- Brief context (1-2 lines)
+
+Slides 2-3 (Introduction & Context):
+- Why this topic matters
+- Historical context or background
+- Current relevance and significance
+- Real-world applications
+
+Slides 4-6 (Foundational Concepts):
+- Core definitions and principles with detailed explanations
+- Key terminology with clear definitions and usage examples
+- Fundamental frameworks or models with visual descriptions
+- Each concept explained with multiple concrete examples
+- Historical background or origin of key concepts
+- Connections between different concepts
+- Common misconceptions and clarifications
+
+Slides 7-12 (Main Content - Key Findings & Analysis):
+- Detailed exploration of research findings with comprehensive analysis
+- Each finding on its own slide or paired with closely related findings
+- MUST include specific quantitative data, statistics, percentages, or numerical evidence [citations]
+- MUST include at least one detailed case study or real-world example per slide
+- Describe visual elements in detail (charts, graphs, diagrams, infographics that should be included)
+- Include comparisons, contrasts, before/after scenarios, or pros/cons analysis
+- Add industry-specific examples with company names or institutions
+- Include historical context or evolution of the concept
+- Discuss implications and significance of each finding
+
+Slides 13-15 (Challenges & Future Directions):
+- Current challenges and limitations
+- Risks and unknowns
+- Emerging trends
+- Future research directions
+- Practical implications
+
+Slides 16-18 (Applications & Case Studies):
+- Real-world applications with specific company or organization examples
+- Industry-specific examples with names, dates, and outcomes
+- Detailed success stories with metrics and results
+- Failure cases with analysis of what went wrong and lessons learned
+- Best practices and recommendations
+- Implementation challenges and solutions
+- ROI or impact measurements where applicable
+
+Slides 19-20 (Conclusion & Takeaways):
+- Key takeaways (4-6 main points)
+- Summary of main arguments
+- Call to action or next steps
+- Further reading resources with citations
+
+CONTENT DEPTH REQUIREMENTS:
+- Each slide must have 5-7 detailed bullet points (not just single words or phrases)
+- Bullet points should be complete sentences or comprehensive statements with context
+- ALWAYS include specific examples, statistics, case studies, or real-world applications
+- Each bullet point should be substantive (15-25 words minimum)
+- Speaker notes should be 250-400 words per slide with:
+  * Detailed explanations of each bullet point
+  * Additional context and background information
+  * Suggested questions for audience engagement
+  * Transitions to next slide
+  * Examples that illustrate the concepts
+  * Potential discussion points
+- Provide context, connections between concepts, and practical implications
+- Reference research findings with inline citations [1], [2], etc.
+- Include quantitative data, percentages, or metrics where applicable
+- Add real-world company names, case studies, or historical examples
+
+IMPORTANT:
+- Every factual claim must include citation [n]
+- Content must be detailed enough to support 3-5 minutes of speaking PER SLIDE
+- Use academic but accessible language with clear explanations
+- Include smooth transitions between topics in speaker notes
+- Suggest specific visual elements (graphs, images, diagrams, charts, infographics) in speaker notes with descriptions
+- Total presentation time should be 60-90 minutes (minimum 60 minutes)
+- Prioritize depth over breadth - provide comprehensive coverage of each topic
+- Include actionable insights and practical takeaways
+- Use storytelling elements where appropriate to maintain engagement
+- Add discussion questions or thought-provoking prompts in speaker notes
+- Include contemporary examples from the last 2-3 years where relevant
+
+Return ONLY valid JSON in this exact format:
+[
+  {{
+    "slide_number": 1,
+    "title": "Slide Title",
+    "content": ["Detailed point 1", "Detailed point 2", "Detailed point 3"],
+    "speaker_notes": "Comprehensive talking points for 3-5 minutes...",
+    "slide_type": "title"
+  }},
+  ...
+]

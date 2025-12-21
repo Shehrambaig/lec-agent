@@ -7,6 +7,7 @@ from .synthesis_node import synthesis_node
 from .refinement_node import refinement_node
 from .brief_node import brief_node
 from .formatting_node import formatting_node
+from .slide_generation_node import slide_generation_node
 
 __all__ = [
     "input_node",
@@ -17,5 +18,6 @@ __all__ = [
     "synthesis_node",
     "refinement_node",
     "brief_node",
-    "formatting_node"
+    "formatting_node",
+    "slide_generation_node"
 ]

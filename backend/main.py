@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import asyncio
@@ -102,6 +103,17 @@ def extract_node_trace(node_name: str, state: ResearchState) -> dict:
             "Formatted and saved final output",
             f"Brief saved to outputs folder"
         ]
+
+    elif node_name == "slides":
+        if state.slides_file_path:
+            trace["details"] = [
+                f"Generated PowerPoint presentation",
+                f"Slides: {len(state.slides_data) if state.slides_data and isinstance(state.slides_data, list) else 'N/A'}",
+                f"File: {state.slides_file_path}"
+            ]
+            trace["slides_file"] = state.slides_file_path
+        else:
+            trace["details"] = ["Slide generation attempted"]
 
     return trace
 
@@ -721,6 +733,18 @@ Time Allocation:
 
             print("✅ Graph execution completed")
 
+            # Get the final state from the graph to access slides_file_path
+            print("📊 Fetching final state from graph...")
+            final_graph_state = research_graph.get_state(config)
+            if final_graph_state and final_graph_state.values:
+                state = exec_context["state"]
+                # Update state with final values
+                for key, value in final_graph_state.values.items():
+                    if hasattr(state, key):
+                        setattr(state, key, value)
+                exec_context["state"] = state
+                print(f"✓ Final state updated with {len(final_graph_state.values)} fields")
+
         except Exception as graph_error:
             print(f"❌ Graph execution error: {graph_error}")
             import traceback
@@ -771,10 +795,25 @@ Time Allocation:
             print(
                 f"  - final_brief: {getattr(state, 'final_brief', 'NOT SET')[:100] if hasattr(state, 'final_brief') else 'MISSING'}")
 
+        # Get slides file path if available
+        slides_file = ""
+        if hasattr(state, 'slides_file_path') and state.slides_file_path:
+            slides_file = state.slides_file_path
+            print(f"📊 Slides file from state: {slides_file}")
+        else:
+            # Try to get from final graph state as fallback
+            final_state = research_graph.get_state(config)
+            if final_state and final_state.values and 'slides_file_path' in final_state.values:
+                slides_file = final_state.values['slides_file_path']
+                print(f"📊 Slides file from graph state: {slides_file}")
+            else:
+                print("⚠️ No slides file found in state")
+
         await send_message({
             "type": "complete",
             "message": "Research brief generated successfully" if brief_content else "Brief saved to outputs folder",
-            "brief_content": brief_content if brief_content else "Brief generation completed. Check the outputs folder for the saved file."
+            "brief_content": brief_content if brief_content else "Brief generation completed. Check the outputs folder for the saved file.",
+            "slides_file": slides_file
         })
 
         exec_context["status"] = "completed"
@@ -861,6 +900,34 @@ async def get_status(session_id: str):
         "checkpoint": exec_context.get("checkpoint"),
         "topic": state.topic
     }
+
+
+@app.get("/download/slides/{filename}")
+async def download_slides(filename: str):
+    """
+    Download PowerPoint slides file.
+
+    Args:
+        filename: Name of the .pptx file in the outputs directory
+
+    Returns:
+        FileResponse with the PowerPoint file
+    """
+    import os
+
+    file_path = os.path.join("outputs", filename)
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Slides file not found")
+
+    if not file_path.endswith('.pptx'):
+        raise HTTPException(status_code=400, detail="Invalid file type. Only .pptx files allowed")
+
+    return FileResponse(
+        path=file_path,
+        media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        filename=filename
+    )
 
 
 if __name__ == "__main__":

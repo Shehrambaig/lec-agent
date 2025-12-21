@@ -12,7 +12,8 @@ from backend.nodes import (
     synthesis_node,
     refinement_node,
     brief_node,
-    formatting_node
+    formatting_node,
+    slide_generation_node
 )
 
 
@@ -49,7 +50,7 @@ def create_research_graph():
     Create the LangGraph workflow for lecture research.
 
     Workflow:
-    INPUT → PLAN → [HITL: approve/revise loop] → SEARCH → EXTRACT → PRIORITIZE → SYNTHESIZE → REFINE → BRIEF → FORMAT → END
+    INPUT → PLAN → [HITL: approve/revise loop] → SEARCH → EXTRACT → PRIORITIZE → SYNTHESIZE → REFINE → BRIEF → FORMAT → SLIDES → END
     """
     checkpointer = MemorySaver()
     print("ℹ️  Using MemorySaver (checkpoints in memory only)")
@@ -66,6 +67,7 @@ def create_research_graph():
     workflow.add_node("refine", refinement_node)
     workflow.add_node("brief", brief_node)
     workflow.add_node("format", formatting_node)
+    workflow.add_node("slides", slide_generation_node)
 
     # Set entry point
     workflow.set_entry_point("input")
@@ -101,7 +103,8 @@ def create_research_graph():
 
     # Final steps
     workflow.add_edge("brief", "format")
-    workflow.add_edge("format", END)
+    workflow.add_edge("format", "slides")
+    workflow.add_edge("slides", END)
 
     # Compile with interrupt points:
     # 1. Before search - for research plan approval (NEW)
